@@ -56,6 +56,12 @@ const Icons = {
       <path d="M5 19h14" strokeLinecap="round"/>
     </svg>
   ),
+  lens: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+    </svg>
+  ),
 };
 
 const SYMMETRY_OPTIONS = [2, 3, 4, 5, 6, 8, 10, 12];
@@ -72,6 +78,7 @@ export default function App() {
 
   const [showLanding, setShowLanding]   = useState(true);
   const [landingExit, setLandingExit]   = useState(false);
+  const [showcaseMode, setShowcaseMode] = useState(false);
   const [atmosphere, setAtmosphere]     = useState<Atmosphere>(DEFAULT_ATMOSPHERE);
   const [symmetry, setSymmetry]         = useState(6);
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -191,6 +198,10 @@ export default function App() {
     if (gyroEnabled) engineRef.current.enableGyroscope();
     else             engineRef.current.disableGyroscope();
   }, [gyroEnabled]);
+
+  useEffect(() => {
+    engineRef.current?.setShowcaseMode(showcaseMode);
+  }, [showcaseMode]);
 
   /* ===== Pointer Handlers ===== */
   const onPointerDown = useCallback((e: React.PointerEvent) => {
@@ -340,7 +351,7 @@ export default function App() {
         />
       </div>
 
-      <div className={`velari-ui ${isDrawing ? 'drawing' : ''}`}>
+      <div className={`velari-ui ${isDrawing ? 'drawing' : ''} ${showcaseMode ? 'showcase-active' : ''}`}>
         {/* Logo */}
         <div className="velari-logo">
           <div className="velari-logo__icon">{Icons.logo}</div>
@@ -450,6 +461,17 @@ export default function App() {
             {Icons.clear}
             <span className="toolbar-btn__tooltip">Clear Canvas</span>
           </button>
+
+          {/* Showcase Mode */}
+          <button
+            ref={(el) => { toolbarBtnRefs.current[4] = el; }}
+            className={`toolbar-btn ${showcaseMode ? 'active' : ''}`}
+            onClick={() => setShowcaseMode(!showcaseMode)}
+            id="showcase-btn"
+          >
+            {Icons.lens}
+            <span className="toolbar-btn__tooltip">Showcase Mode</span>
+          </button>
         </div>
 
         {/* Atmosphere Selector */}
@@ -500,6 +522,43 @@ export default function App() {
           {driftEnabled && <span className="info-badge drift-badge">⟳ Drift</span>}
           {gyroEnabled  && <span className="info-badge gyro-badge">⌀ Gyro</span>}
         </div>
+
+        {/* Showcase Overlay */}
+        {showcaseMode && (
+          <div className="showcase-overlay">
+            <div className="cinematic-bars" />
+            
+            <div className="showcase-controls">
+              <h2 className="showcase-title">Showcase Presets</h2>
+              <div className="preset-grid">
+                {[
+                  { id: 'galaxy-spiral', name: 'Galaxy' },
+                  { id: 'neural-network', name: 'Neural' },
+                  { id: 'cosmic-wave', name: 'Wave' },
+                  { id: 'symmetry-mandala', name: 'Mandala' },
+                  { id: 'neon-landscape', name: 'Landscape' }
+                ].map(p => (
+                  <button 
+                    key={p.id} 
+                    className="preset-btn"
+                    onClick={() => engineRef.current?.loadPreset(p.id)}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="showcase-actions">
+                <button className="action-btn capture" onClick={saveDrawing}>
+                  {Icons.download} Capture Showcase
+                </button>
+                <button className="action-btn exit" onClick={() => setShowcaseMode(false)}>
+                  Exit Lens
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

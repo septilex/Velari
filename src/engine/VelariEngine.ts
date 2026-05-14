@@ -74,6 +74,9 @@ export class VelariEngine {
   // Pre-generated stars
   private stars: { x: number; y: number; s: number; b: number; speed: number }[] = [];
 
+  // Showcase Mode
+  private showcaseActive = false;
+
   constructor(canvas: HTMLCanvasElement, atmosphere: Atmosphere) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d', { alpha: false })!;
@@ -131,6 +134,138 @@ export class VelariEngine {
   // ── Phase 1: Drift ──────────────────────────────────────────────────────────
   setDrift(enabled: boolean) { this.driftEnabled = enabled; }
   getDriftAngle() { return this.driftAngle; }
+
+  // ── Showcase Mode ───────────────────────────────────────────────────────────
+  setShowcaseMode(enabled: boolean) {
+    this.showcaseActive = enabled;
+  }
+
+  async loadPreset(name: string) {
+    this.clearCanvas();
+    const cx = this.width / 2;
+    const cy = this.height / 2;
+    const atmo = this.atmosphere;
+
+    switch (name) {
+      case 'galaxy-spiral':
+        this.generateGalaxySpiral(cx, cy, atmo);
+        break;
+      case 'neural-network':
+        this.generateNeuralNetwork(cx, cy, atmo);
+        break;
+      case 'cosmic-wave':
+        this.generateCosmicWave(cx, cy, atmo);
+        break;
+      case 'symmetry-mandala':
+        this.generateSymmetryMandala(cx, cy, atmo);
+        break;
+      case 'neon-landscape':
+        this.generateNeonLandscape(cx, cy, atmo);
+        break;
+    }
+  }
+
+  private generateGalaxySpiral(cx: number, cy: number, atmo: Atmosphere) {
+    const arms = 3;
+    const ptsPerArm = 150;
+    for (let a = 0; a < arms; a++) {
+      const armOffset = (a / arms) * Math.PI * 2;
+      for (let i = 0; i < ptsPerArm; i++) {
+        const r = (i / ptsPerArm) * Math.min(this.width, this.height) * 0.45;
+        const theta = (i / ptsPerArm) * Math.PI * 4 + armOffset;
+        const x = cx + Math.cos(theta) * r;
+        const y = cy + Math.sin(theta) * r;
+        
+        const color = atmo.colors[i % atmo.colors.length];
+        this.particles.push({
+          x, y, vx: (Math.random() - 0.5) * 0.1, vy: (Math.random() - 0.5) * 0.1,
+          life: 1, maxLife: 500 + Math.random() * 1000, size: 1 + Math.random() * 3,
+          color, alpha: 0.6
+        });
+      }
+    }
+  }
+
+  private generateNeuralNetwork(cx: number, cy: number, atmo: Atmosphere) {
+    const nodes = 40;
+    const points: {x: number, y: number}[] = [];
+    for (let i = 0; i < nodes; i++) {
+      points.push({
+        x: Math.random() * this.width,
+        y: Math.random() * this.height
+      });
+    }
+
+    points.forEach((p, i) => {
+      points.slice(i + 1).forEach(p2 => {
+        const d = Math.hypot(p.x - p2.x, p.y - p2.y);
+        if (d < 200) {
+          this.drawCtx.strokeStyle = atmo.colors[0];
+          this.drawCtx.globalAlpha = (1 - d / 200) * 0.3;
+          this.drawCtx.lineWidth = 1;
+          this.drawCtx.beginPath();
+          this.drawCtx.moveTo(p.x, p.y);
+          this.drawCtx.lineTo(p2.x, p2.y);
+          this.drawCtx.stroke();
+        }
+      });
+      this.particles.push({
+        x: p.x, y: p.y, vx: 0, vy: 0, life: 1, maxLife: 2000,
+        size: 3, color: '#fff', alpha: 0.8
+      });
+    });
+  }
+
+  private generateCosmicWave(cx: number, cy: number, atmo: Atmosphere) {
+    for (let i = 0; i < 400; i++) {
+      const x = (i / 400) * this.width;
+      const y = cy + Math.sin(i * 0.05) * 100 + Math.cos(i * 0.02) * 50;
+      this.particles.push({
+        x, y, vx: (Math.random() - 0.5) * 0.2, vy: (Math.random() - 0.5) * 0.2,
+        life: 1, maxLife: 1000, size: 2,
+        color: atmo.colors[i % atmo.colors.length], alpha: 0.7
+      });
+    }
+  }
+
+  private generateSymmetryMandala(cx: number, cy: number, atmo: Atmosphere) {
+    const layers = 5;
+    for (let l = 1; l <= layers; l++) {
+      const count = l * 12;
+      const r = l * 60;
+      for (let i = 0; i < count; i++) {
+        const theta = (i / count) * Math.PI * 2;
+        const x = cx + Math.cos(theta) * r;
+        const y = cy + Math.sin(theta) * r;
+        this.particles.push({
+          x, y, vx: 0, vy: 0, life: 1, maxLife: 3000,
+          size: 4 - l * 0.5, color: atmo.colors[l % atmo.colors.length], alpha: 0.9
+        });
+      }
+    }
+  }
+
+  private generateNeonLandscape(cx: number, cy: number, atmo: Atmosphere) {
+    const lines = 15;
+    for (let i = 0; i < lines; i++) {
+      const y = this.height * 0.6 + (i / lines) * this.height * 0.4;
+      const opacity = (i / lines) * 0.5;
+      this.drawCtx.strokeStyle = atmo.colors[0];
+      this.drawCtx.globalAlpha = opacity;
+      this.drawCtx.lineWidth = 2;
+      this.drawCtx.beginPath();
+      this.drawCtx.moveTo(0, y);
+      this.drawCtx.lineTo(this.width, y);
+      this.drawCtx.stroke();
+
+      for (let j = 0; j < 30; j++) {
+        this.particles.push({
+          x: Math.random() * this.width, y, vx: 0, vy: 0,
+          life: 1, maxLife: 1000, size: 1, color: '#fff', alpha: 0.5
+        });
+      }
+    }
+  }
 
   // ── Phase 1: Gyroscope ──────────────────────────────────────────────────────
   enableGyroscope() {
@@ -349,12 +484,13 @@ export class VelariEngine {
 
     // Soft glow halo
     this.glowCtx.save();
-    this.glowCtx.globalAlpha = 0.08 * atmo.glowIntensity * (mirror ? 0.6 : 1);
+    const showcaseBoost = this.showcaseActive ? 1.5 : 1.0;
+    this.glowCtx.globalAlpha = 0.08 * atmo.glowIntensity * (mirror ? 0.6 : 1) * showcaseBoost;
     this.glowCtx.strokeStyle = color;
-    this.glowCtx.lineWidth = width * 4;
+    this.glowCtx.lineWidth = width * 4 * showcaseBoost;
     this.glowCtx.lineCap = 'round';
     this.glowCtx.shadowColor = color;
-    this.glowCtx.shadowBlur = 25 * atmo.glowIntensity;
+    this.glowCtx.shadowBlur = 25 * atmo.glowIntensity * showcaseBoost;
     this.glowCtx.beginPath();
     this.glowCtx.moveTo(tp1.x, tp1.y);
     this.glowCtx.bezierCurveTo(tcp1.x, tcp1.y, tcp2.x, tcp2.y, tp2.x, tp2.y);
@@ -466,15 +602,16 @@ export class VelariEngine {
 
     // Batch similar particles
     ctx.save();
+    const showcaseBoost = this.showcaseActive ? 1.4 : 1.0;
     for (const p of this.particles) {
       const alpha = p.alpha * p.life * p.life; // quadratic falloff
       if (alpha < 0.01) continue;
       ctx.globalAlpha = alpha;
       ctx.fillStyle = p.color;
       ctx.shadowColor = p.color;
-      ctx.shadowBlur = p.size * 3;
+      ctx.shadowBlur = p.size * 3 * showcaseBoost;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * (0.3 + 0.7 * p.life), 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size * (0.3 + 0.7 * p.life) * showcaseBoost, 0, Math.PI * 2);
       ctx.fill();
     }
 
