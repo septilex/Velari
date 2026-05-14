@@ -1,0 +1,539 @@
+/* ===== VELARI Design System ===== */
+:root {
+  --bg-primary: #06060e;
+  --bg-secondary: #0c0c1a;
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-hover: rgba(255,255,255,0.08);
+  --text-primary: rgba(255,255,255,0.92);
+  --text-secondary: rgba(255,255,255,0.55);
+  --text-muted: rgba(255,255,255,0.3);
+  --accent-glow: #7c6aef;
+  --accent-pink: #e06aaf;
+  --accent-cyan: #5ce0d8;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 999px;
+  --blur: 20px;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Global ===== */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--bg-primary); color:var(--text-primary); font-family:var(--font-body); -webkit-font-smoothing:antialiased; touch-action:none; user-select:none; }
+
+/* ===== Canvas Layer ===== */
+.velari-canvas-layer { position:fixed; inset:0; z-index:1; }
+.velari-canvas-layer canvas { display:block; width:100%!important; height:100%!important; cursor:crosshair; }
+
+/* ===== UI Overlay ===== */
+.velari-ui { position:fixed; inset:0; z-index:10; pointer-events:none; }
+.velari-ui > * { pointer-events:auto; }
+.velari-ui.drawing > *:not(.velari-logo) { opacity:0; pointer-events:none; transition:opacity 0.6s ease; }
+.velari-ui > * { transition:opacity 0.4s ease; }
+
+/* ===== Logo ===== */
+.velari-logo {
+  position:absolute; top:24px; left:28px;
+  display:flex; align-items:center; gap:10px;
+  padding:10px 18px;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-md);
+  backdrop-filter:blur(var(--blur));
+  -webkit-backdrop-filter:blur(var(--blur));
+  cursor:default;
+  animation:logoFloat 6s ease-in-out infinite;
+  transition:var(--transition);
+}
+.velari-logo::before {
+  content:''; position:absolute; inset:-1px;
+  border-radius:inherit;
+  background:linear-gradient(135deg, rgba(124,106,239,0.15), transparent 50%, rgba(224,106,175,0.1));
+  z-index:-1;
+  opacity:0.6; transition:opacity var(--transition);
+}
+.velari-logo:hover::before { opacity:1; }
+.velari-logo:hover { border-color:rgba(255,255,255,0.14); transform:scale(1.03); }
+
+.velari-logo__icon {
+  width:26px; height:26px;
+  border-radius:8px;
+  background:linear-gradient(135deg, var(--accent-glow), var(--accent-pink));
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 20px rgba(124,106,239,0.3);
+  animation:logoPulse 4s ease-in-out infinite;
+}
+.velari-logo__icon svg { width:16px; height:16px; }
+.velari-logo__text {
+  font-family:var(--font-display);
+  font-size:16px; font-weight:600;
+  letter-spacing:3px;
+  background:linear-gradient(135deg, #fff 30%, var(--accent-cyan));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+@keyframes logoFloat {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-4px); }
+}
+@keyframes logoPulse {
+  0%,100% { box-shadow:0 0 20px rgba(124,106,239,0.3); }
+  50% { box-shadow:0 0 30px rgba(124,106,239,0.5); }
+}
+
+/* ===== Glass Panel ===== */
+.glass-panel {
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-md);
+  backdrop-filter:blur(var(--blur));
+  -webkit-backdrop-filter:blur(var(--blur));
+  transition:var(--transition);
+}
+.glass-panel:hover { border-color:rgba(255,255,255,0.12); }
+
+/* ===== Toolbar (Right) ===== */
+.velari-toolbar {
+  position:absolute; right:24px; top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:6px;
+  padding:8px;
+}
+.toolbar-btn {
+  width:44px; height:44px;
+  border:none; background:transparent;
+  border-radius:var(--radius-sm);
+  color:var(--text-secondary);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; position:relative;
+  transition:transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  will-change:transform;
+}
+.toolbar-btn svg { width:20px; height:20px; transition:transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.toolbar-btn:hover { color:var(--text-primary); }
+.toolbar-btn:hover svg { transform:scale(1.15); }
+.toolbar-btn.active {
+  background:rgba(124,106,239,0.15); color:var(--accent-glow);
+}
+.toolbar-btn.active::after {
+  content:''; position:absolute; right:-8px; top:50%; transform:translateY(-50%);
+  width:3px; height:16px; border-radius:2px;
+  background:var(--accent-glow);
+  box-shadow:0 0 8px var(--accent-glow);
+}
+.toolbar-btn__tooltip {
+  position:absolute; right:calc(100% + 12px); top:50%; transform:translateY(-50%);
+  padding:5px 10px; border-radius:8px;
+  background:rgba(20,20,40,0.9); border:1px solid var(--glass-border);
+  backdrop-filter:blur(12px);
+  font-size:12px; font-weight:500; white-space:nowrap;
+  color:var(--text-primary);
+  opacity:0; pointer-events:none;
+  transition:opacity 0.2s ease, transform 0.2s ease;
+  transform:translateY(-50%) translateX(4px);
+}
+.toolbar-btn:hover .toolbar-btn__tooltip {
+  opacity:1; transform:translateY(-50%) translateX(0);
+}
+
+/* ===== Atmosphere Selector ===== */
+.atmosphere-ring {
+  position:absolute; bottom:32px; left:50%; transform:translateX(-50%);
+  display:flex; gap:8px; padding:8px 14px;
+}
+.atmo-btn {
+  width:36px; height:36px;
+  border-radius:50%; border:2px solid transparent;
+  cursor:pointer; position:relative;
+  transition:var(--transition);
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px;
+}
+.atmo-btn:hover { transform:scale(1.2); border-color:rgba(255,255,255,0.2); }
+.atmo-btn.active { border-color:rgba(255,255,255,0.5); transform:scale(1.15); box-shadow:0 0 20px rgba(124,106,239,0.3); }
+.atmo-btn__label {
+  position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+  padding:4px 8px; border-radius:6px;
+  background:rgba(20,20,40,0.9); border:1px solid var(--glass-border);
+  font-size:11px; font-weight:500; white-space:nowrap;
+  color:var(--text-primary);
+  opacity:0; pointer-events:none;
+  transition:opacity 0.2s ease;
+}
+.atmo-btn:hover .atmo-btn__label { opacity:1; }
+
+/* ===== Landing Overlay ===== */
+.velari-landing {
+  position:fixed; inset:0; z-index:100;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at center, rgba(12,12,30,0.85) 0%, rgba(6,6,14,0.97) 70%);
+  backdrop-filter:blur(40px);
+  animation:landingIn 1.2s ease-out;
+}
+.velari-landing.exiting {
+  animation:landingOut 0.8s ease-in forwards;
+}
+.landing-tagline {
+  font-family:var(--font-display);
+  font-size:clamp(28px, 5vw, 56px);
+  font-weight:300;
+  text-align:center;
+  letter-spacing:1px;
+  background:linear-gradient(135deg, #fff 0%, var(--accent-cyan) 50%, var(--accent-pink) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:40px;
+  animation:taglineGlow 4s ease-in-out infinite alternate;
+}
+.landing-cta {
+  padding:14px 36px;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:var(--radius-full);
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(12px);
+  color:var(--text-primary);
+  font-family:var(--font-display);
+  font-size:15px; font-weight:500;
+  letter-spacing:2px;
+  cursor:pointer;
+  transition:var(--transition);
+  position:relative; overflow:hidden;
+}
+.landing-cta::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg, rgba(124,106,239,0.2), rgba(224,106,175,0.2));
+  opacity:0; transition:opacity var(--transition);
+}
+.landing-cta:hover { border-color:rgba(255,255,255,0.3); transform:scale(1.05); }
+.landing-cta:hover::before { opacity:1; }
+
+@keyframes landingIn { from { opacity:0; } to { opacity:1; } }
+@keyframes landingOut { from { opacity:1; } to { opacity:0; pointer-events:none; } }
+@keyframes taglineGlow {
+  from { filter:brightness(1); }
+  to { filter:brightness(1.15); }
+}
+
+/* ===== Symmetry Controls (Top Center) ===== */
+.symmetry-controls {
+  position:absolute; top:24px; left:50%; transform:translateX(-50%);
+  display:flex; gap:4px; padding:6px;
+}
+.sym-btn {
+  padding:6px 14px; border:none;
+  border-radius:8px; background:transparent;
+  color:var(--text-secondary);
+  font-family:var(--font-body);
+  font-size:12px; font-weight:500;
+  cursor:pointer; transition:var(--transition);
+}
+.sym-btn:hover { color:var(--text-primary); background:var(--glass-hover); }
+.sym-btn.active { color:var(--text-primary); background:rgba(124,106,239,0.18); }
+
+/* ===== Sound Toggle ===== */
+.sound-toggle {
+  position:absolute; top:24px; right:24px;
+  display:flex; align-items:center; gap:8px;
+  padding:8px 14px;
+}
+.sound-toggle__label {
+  font-size:11px; font-weight:500;
+  color:var(--text-secondary);
+  letter-spacing:0.5px;
+  text-transform:uppercase;
+}
+.sound-toggle__switch {
+  width:36px; height:20px;
+  border-radius:10px; border:none;
+  background:rgba(255,255,255,0.1);
+  cursor:pointer; position:relative;
+  transition:var(--transition);
+}
+.sound-toggle__switch::after {
+  content:''; position:absolute;
+  top:3px; left:3px;
+  width:14px; height:14px;
+  border-radius:50%;
+  background:var(--text-secondary);
+  transition:var(--transition);
+}
+.sound-toggle__switch.active { background:rgba(124,106,239,0.4); }
+.sound-toggle__switch.active::after { left:19px; background:var(--accent-glow); box-shadow:0 0 8px var(--accent-glow); }
+
+/* ===== Info Panel ===== */
+.info-panel {
+  position:absolute; bottom:32px; right:24px;
+  padding:10px 14px;
+  font-size:11px; color:var(--text-muted);
+  font-variant-numeric:tabular-nums;
+}
+.info-panel span { margin-left:12px; }
+
+/* ===== Flow State Meter ===== */
+.flow-meter {
+  position:absolute; left:28px; bottom:32px;
+  padding:10px 16px;
+  display:flex; flex-direction:column; gap:4px;
+}
+.flow-meter__label {
+  font-size:10px; font-weight:500;
+  letter-spacing:1px; text-transform:uppercase;
+  color:var(--text-muted);
+}
+.flow-meter__state {
+  font-family:var(--font-display);
+  font-size:14px; font-weight:500;
+  background:linear-gradient(90deg, var(--accent-glow), var(--accent-cyan));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+/* ===== Responsive ===== */
+@media (max-width:768px) {
+  .velari-logo { top:16px; left:16px; padding:8px 12px; }
+  .velari-logo__text { font-size:13px; letter-spacing:2px; }
+  .velari-toolbar { right:12px; }
+  .toolbar-btn { width:38px; height:38px; }
+  .atmosphere-ring { bottom:20px; gap:6px; padding:6px 10px; }
+  .atmo-btn { width:30px; height:30px; font-size:14px; }
+  .symmetry-controls { top:16px; }
+  .sound-toggle { top:16px; right:12px; }
+  .info-panel { bottom:20px; right:12px; }
+  .flow-meter { left:16px; bottom:20px; }
+  .dna-panel { bottom:20px; left:50%; transform:translateX(-50%); right:auto; }
+}
+
+/* ===== DNA Fingerprint Panel ===== */
+.dna-panel {
+  position:absolute;
+  bottom: 32px;
+  /* sits just above the atmosphere ring */
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 92px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px 8px 10px;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+.dna-panel__icon {
+  width: 20px; height: 20px;
+  color: var(--accent-glow);
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+.dna-panel__icon svg { width: 100%; height: 100%; }
+
+.dna-panel__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.dna-panel__label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.dna-panel__code {
+  font-family: 'Space Mono', 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  background: linear-gradient(90deg, var(--accent-glow), var(--accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  min-width: 80px;
+}
+
+.dna-panel__copy {
+  width: 28px; height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.dna-panel__copy svg { width: 14px; height: 14px; }
+.dna-panel__copy:hover { background: var(--glass-hover); color: var(--text-primary); }
+.dna-panel__copy.copied {
+  color: var(--accent-cyan);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ===== Info Panel Badges ===== */
+.info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+}
+.drift-badge {
+  background: rgba(124,106,239,0.2);
+  color: var(--accent-glow);
+  animation: driftBadgePulse 2s ease-in-out infinite;
+}
+.gyro-badge {
+  background: rgba(92,224,216,0.2);
+  color: var(--accent-cyan);
+}
+@keyframes driftBadgePulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* ===== Export Panel ===== */
+.export-panel {
+  position: absolute;
+  top: 72px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+}
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.export-btn svg {
+  width: 14px;
+  height: 14px;
+  color: var(--accent-cyan);
+  transition: var(--transition);
+}
+
+.export-btn:hover {
+  background: var(--glass-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.export-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.export-btn.copied {
+  background: rgba(92, 224, 216, 0.15);
+  color: var(--accent-cyan);
+  border-color: rgba(92, 224, 216, 0.3);
+}
+
+.export-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 6px;
+  border-left: 1px solid var(--glass-border);
+  cursor: pointer;
+}
+
+.export-toggle__label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  transition: var(--transition);
+}
+
+.export-toggle:hover .export-toggle__label {
+  color: var(--text-primary);
+}
+
+.export-toggle__switch {
+  width: 28px;
+  height: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  position: relative;
+  transition: var(--transition);
+}
+
+.export-toggle__switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.export-toggle__switch.active {
+  background: rgba(92, 224, 216, 0.3);
+}
+
+.export-toggle__switch.active::after {
+  left: 14px;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 6px var(--accent-cyan);
+}
+
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .export-panel {
+    top: 56px;
+    right: 12px;
+    padding: 5px 8px;
+    gap: 5px;
+  }
+  .export-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+    gap: 4px;
+  }
+  .export-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+  .desktop-only {
+    display: none;
+  }
+  .mobile-only {
+    display: inline;
+  }
+  .export-toggle {
+    padding-left: 4px;
+    gap: 4px;
+  }
+}
+
+
