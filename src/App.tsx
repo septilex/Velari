@@ -56,12 +56,6 @@ const Icons = {
       <path d="M5 19h14" strokeLinecap="round"/>
     </svg>
   ),
-  lens: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
-    </svg>
-  ),
 };
 
 const SYMMETRY_OPTIONS = [2, 3, 4, 5, 6, 8, 10, 12];
@@ -74,11 +68,9 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<VelariEngine | null>(null);
   const audioRef  = useRef<VelariAudio>(new VelariAudio());
-  const toolbarBtnRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   const [showLanding, setShowLanding]   = useState(true);
   const [landingExit, setLandingExit]   = useState(false);
-  const [showcaseMode, setShowcaseMode] = useState(false);
   const [atmosphere, setAtmosphere]     = useState<Atmosphere>(DEFAULT_ATMOSPHERE);
   const [symmetry, setSymmetry]         = useState(6);
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -121,74 +113,6 @@ export default function App() {
     };
   }, [showLanding]);
 
-  /* ===== macOS Dock Hover Proximity Effect ===== */
-  useEffect(() => {
-    let animFrame = 0;
-    const handleMouseMove = (e: MouseEvent) => {
-      cancelAnimationFrame(animFrame);
-      animFrame = requestAnimationFrame(() => {
-        const clientX = e.clientX;
-        const clientY = e.clientY;
-        // Trigger scaling when mouse is near the right boundary
-        const isNearRight = window.innerWidth - clientX < 140;
-
-        toolbarBtnRefs.current.forEach((btn) => {
-          if (!btn) return;
-          if (!isNearRight) {
-            btn.style.transform = 'scale(1)';
-            btn.style.boxShadow = 'none';
-            btn.style.background = '';
-            return;
-          }
-
-          const rect = btn.getBoundingClientRect();
-          const btnCenterY = rect.top + rect.height / 2;
-          const dist = Math.abs(clientY - btnCenterY);
-          const maxDist = 110;
-
-          if (dist < maxDist) {
-            // Cosine bell scaling curve mapping
-            const factor = Math.pow(Math.cos((dist / maxDist) * (Math.PI / 2)), 1.4);
-            const scale = 1 + factor * 0.45; // scales up smoothly based on proximity
-            btn.style.transform = `scale(${scale})`;
-            btn.style.transformOrigin = 'right center';
-            
-            // Soft glassmorphic 3D lighting feel
-            if (factor > 0.15) {
-              btn.style.boxShadow = `0 0 ${8 + factor * 12}px rgba(124, 106, 239, ${factor * 0.4})`;
-              btn.style.background = `rgba(255, 255, 255, ${0.04 + factor * 0.08})`;
-            } else {
-              btn.style.boxShadow = 'none';
-              btn.style.background = '';
-            }
-          } else {
-            btn.style.transform = 'scale(1)';
-            btn.style.boxShadow = 'none';
-            btn.style.background = '';
-          }
-        });
-      });
-    };
-
-    const handleMouseLeave = () => {
-      cancelAnimationFrame(animFrame);
-      toolbarBtnRefs.current.forEach((btn) => {
-        if (!btn) return;
-        btn.style.transform = 'scale(1)';
-        btn.style.boxShadow = 'none';
-        btn.style.background = '';
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseleave', handleMouseLeave);
-    return () => {
-      cancelAnimationFrame(animFrame);
-      window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
-
   /* ===== Sync settings ===== */
   useEffect(() => { engineRef.current?.setAtmosphere(atmosphere); }, [atmosphere]);
   useEffect(() => { engineRef.current?.setSymmetry(symmetry); },    [symmetry]);
@@ -198,10 +122,6 @@ export default function App() {
     if (gyroEnabled) engineRef.current.enableGyroscope();
     else             engineRef.current.disableGyroscope();
   }, [gyroEnabled]);
-
-  useEffect(() => {
-    engineRef.current?.setShowcaseMode(showcaseMode);
-  }, [showcaseMode]);
 
   /* ===== Pointer Handlers ===== */
   const onPointerDown = useCallback((e: React.PointerEvent) => {
@@ -303,32 +223,20 @@ export default function App() {
         className={`velari-landing ${landingExit ? 'exiting' : ''}`}
         style={{ background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
       >
-        <GalaxyBackground themeName={landingTheme} />
-
-        <div className="velari-logo" style={{ position: 'relative', top: 'auto', left: 'auto', marginBottom: 56 }}>
-          <div
-            className="velari-logo__icon"
-            style={{ background: `linear-gradient(135deg, ${themeConfig.coreColor}, ${themeConfig.glowColor})` }}
-          >
-            {Icons.logo}
-          </div>
-          <span className="velari-logo__text">VELARI</span>
+        <div className="velari-video-bg">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            src="/videos/background.mp4"
+            className="velari-video"
+          />
         </div>
 
-        <h1 className="landing-tagline" style={{ backgroundImage: themeConfig.gradientText }}>
-          Draw the impossible.
-        </h1>
-
-        <p style={{
-          color: 'rgba(255,255,255,0.4)',
-          fontSize: '15px',
-          fontWeight: 300,
-          marginBottom: 44,
-          letterSpacing: '0.5px',
-          fontFamily: 'var(--font-body)',
-        }}>
-          A living generative art universe
-        </p>
+        <div className="hero-velari">
+          <h1 className="hero-velari-text" data-text="VELARI">VELARI</h1>
+        </div>
 
         <button className="landing-cta" onClick={handleEnter} id="begin-creating-btn">
           BEGIN CREATING
@@ -351,7 +259,7 @@ export default function App() {
         />
       </div>
 
-      <div className={`velari-ui ${isDrawing ? 'drawing' : ''} ${showcaseMode ? 'showcase-active' : ''}`}>
+      <div className={`velari-ui ${isDrawing ? 'drawing' : ''}`}>
         {/* Logo */}
         <div className="velari-logo">
           <div className="velari-logo__icon">{Icons.logo}</div>
@@ -417,7 +325,6 @@ export default function App() {
         <div className="velari-toolbar glass-panel">
           {/* Gravity Wells */}
           <button
-            ref={(el) => { toolbarBtnRefs.current[0] = el; }}
             className={`toolbar-btn ${gravityMode ? 'active' : ''}`}
             onClick={() => setGravityMode(!gravityMode)}
             id="gravity-btn"
@@ -428,7 +335,6 @@ export default function App() {
 
           {/* Infinite Drift */}
           <button
-            ref={(el) => { toolbarBtnRefs.current[1] = el; }}
             className={`toolbar-btn ${driftEnabled ? 'active' : ''}`}
             onClick={() => setDriftEnabled(!driftEnabled)}
             id="drift-btn"
@@ -441,7 +347,6 @@ export default function App() {
           {/* Gyroscope — only shown on mobile */}
           {HAS_GYRO && (
             <button
-              ref={(el) => { toolbarBtnRefs.current[2] = el; }}
               className={`toolbar-btn ${gyroEnabled ? 'active' : ''}`}
               onClick={() => setGyroEnabled(!gyroEnabled)}
               id="gyro-btn"
@@ -452,25 +357,9 @@ export default function App() {
           )}
 
           {/* Clear */}
-          <button
-            ref={(el) => { toolbarBtnRefs.current[3] = el; }}
-            className="toolbar-btn"
-            onClick={() => engineRef.current?.clearCanvas()}
-            id="clear-btn"
-          >
+          <button className="toolbar-btn" onClick={() => engineRef.current?.clearCanvas()} id="clear-btn">
             {Icons.clear}
             <span className="toolbar-btn__tooltip">Clear Canvas</span>
-          </button>
-
-          {/* Showcase Mode */}
-          <button
-            ref={(el) => { toolbarBtnRefs.current[4] = el; }}
-            className={`toolbar-btn ${showcaseMode ? 'active' : ''}`}
-            onClick={() => setShowcaseMode(!showcaseMode)}
-            id="showcase-btn"
-          >
-            {Icons.lens}
-            <span className="toolbar-btn__tooltip">Showcase Mode</span>
           </button>
         </div>
 
@@ -522,43 +411,6 @@ export default function App() {
           {driftEnabled && <span className="info-badge drift-badge">⟳ Drift</span>}
           {gyroEnabled  && <span className="info-badge gyro-badge">⌀ Gyro</span>}
         </div>
-
-        {/* Showcase Overlay */}
-        {showcaseMode && (
-          <div className="showcase-overlay">
-            <div className="cinematic-bars" />
-            
-            <div className="showcase-controls">
-              <h2 className="showcase-title">Showcase Presets</h2>
-              <div className="preset-grid">
-                {[
-                  { id: 'galaxy-spiral', name: 'Galaxy' },
-                  { id: 'neural-network', name: 'Neural' },
-                  { id: 'cosmic-wave', name: 'Wave' },
-                  { id: 'symmetry-mandala', name: 'Mandala' },
-                  { id: 'neon-landscape', name: 'Landscape' }
-                ].map(p => (
-                  <button 
-                    key={p.id} 
-                    className="preset-btn"
-                    onClick={() => engineRef.current?.loadPreset(p.id)}
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-              
-              <div className="showcase-actions">
-                <button className="action-btn capture" onClick={saveDrawing}>
-                  {Icons.download} Capture Showcase
-                </button>
-                <button className="action-btn exit" onClick={() => setShowcaseMode(false)}>
-                  Exit Lens
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
