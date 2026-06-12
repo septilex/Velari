@@ -238,6 +238,10 @@ export default function App() {
           <h1 className="hero-velari-text" data-text="VELARI">VELARI</h1>
         </div>
 
+        <h2 className="hero-tagline">
+          A universe where imagination takes form.
+        </h2>
+
         <button className="landing-cta" onClick={handleEnter} id="begin-creating-btn">
           BEGIN CREATING
         </button>
