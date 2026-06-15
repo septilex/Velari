@@ -37,53 +37,45 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
 
 /* ===== Logo ===== */
 .velari-logo {
-  position:absolute; top:24px; left:28px;
-  display:flex; align-items:center; gap:10px;
-  padding:10px 18px;
-  background:var(--glass-bg);
-  border:1px solid var(--glass-border);
-  border-radius:var(--radius-md);
-  backdrop-filter:blur(var(--blur));
-  -webkit-backdrop-filter:blur(var(--blur));
-  cursor:default;
-  animation:logoFloat 6s ease-in-out infinite;
-  transition:var(--transition);
-}
-.velari-logo::before {
-  content:''; position:absolute; inset:-1px;
-  border-radius:inherit;
-  background:linear-gradient(135deg, rgba(124,106,239,0.15), transparent 50%, rgba(224,106,175,0.1));
-  z-index:-1;
-  opacity:0.6; transition:opacity var(--transition);
-}
-.velari-logo:hover::before { opacity:1; }
-.velari-logo:hover { border-color:rgba(255,255,255,0.14); transform:scale(1.03); }
-
-.velari-logo__icon {
-  width:26px; height:26px;
-  border-radius:8px;
-  background:linear-gradient(135deg, var(--accent-glow), var(--accent-pink));
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 0 20px rgba(124,106,239,0.3);
-  animation:logoPulse 4s ease-in-out infinite;
-}
-.velari-logo__icon svg { width:16px; height:16px; }
-.velari-logo__text {
-  font-family:var(--font-display);
-  font-size:16px; font-weight:600;
-  letter-spacing:3px;
-  background:linear-gradient(135deg, #fff 30%, var(--accent-cyan));
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  background-clip:text;
+  position: absolute;
+  top: 32px;
+  left: 36px;
+  font-family: 'Stalinist One', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 4px;
+  color: #ffffff;
+  cursor: default;
+  
+  /* Idle State: Soft purple/violet glow */
+  text-shadow: 0 0 10px rgba(124, 106, 239, 0.3);
+  
+  /* Pulse animation every 8 seconds */
+  animation: logoPulseTransform 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
 }
 
-@keyframes logoFloat {
-  0%,100% { transform:translateY(0); }
-  50% { transform:translateY(-4px); }
+/* Bloom layer for performance (opacity animation instead of text-shadow animation) */
+.velari-logo::after {
+  content: 'VELARI';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  color: transparent;
+  text-shadow: 0 0 20px rgba(144, 126, 255, 0.8), 0 0 40px rgba(144, 126, 255, 0.4);
+  opacity: 0;
+  animation: logoPulseBloom 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: opacity;
+  pointer-events: none;
 }
-@keyframes logoPulse {
-  0%,100% { box-shadow:0 0 20px rgba(124,106,239,0.3); }
-  50% { box-shadow:0 0 30px rgba(124,106,239,0.5); }
+
+@keyframes logoPulseTransform {
+  0%, 92%, 100% { transform: scale(1); }
+  96% { transform: scale(1.03); }
+}
+
+@keyframes logoPulseBloom {
+  0%, 92%, 100% { opacity: 0; }
+  96% { opacity: 1; }
 }
 
 /* ===== Glass Panel ===== */
@@ -171,7 +163,6 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
   background:radial-gradient(ellipse at center, rgba(12,12,30,0.85) 0%, rgba(6,6,14,0.97) 70%);
-  backdrop-filter:blur(40px);
   animation:landingIn 1.2s ease-out;
   gap: 5vh; /* Perfect equal spacing */
 }
@@ -189,7 +180,6 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
 
 /* ===== Stalinist One Typography ===== */
 .hero-velari-text {
-  position: relative;
   font-family: 'Stalinist One', sans-serif;
   font-size: clamp(40px, 11vw, 200px);
   font-weight: 400;
@@ -198,80 +188,7 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 4px;
-  
-  /* Deep Black Chrome / Liquid Obsidian */
-  background: linear-gradient(
-    110deg,
-    #020204 0%,
-    #08080a 30%,
-    #15151c 45%, /* Specular highlight approach */
-    #eef2f5 50%, /* Sharp chrome reflection */
-    #050508 55%,
-    #020204 80%,
-    #08080c 100%
-  );
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  
-  /* Reflective edges / subtle chrome rim */
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.15);
-  
-  /* Deep space atmosphere / heavy shadow */
-  filter: drop-shadow(0 40px 80px rgba(0, 0, 0, 0.95));
-  animation: cosmicReflection 16s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-}
-
-@keyframes cosmicReflection {
-  0% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Starlight particles within the text */
-.hero-velari-text::before {
-  content: attr(data-text);
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 1;
-  pointer-events: none;
-  
-  /* Tiny white noise for starlight */
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0, 1 0 0 0 0, 1 0 0 0 0, 0 0 0 3 -1.8' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' fill='white'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  opacity: 0.15;
-  mix-blend-mode: color-dodge;
-  animation: starlightDrift 40s linear infinite;
-}
-
-@keyframes starlightDrift {
-  0% { background-position: 0px 0px; }
-  100% { background-position: 200px 200px; }
-}
-
-/* Soft reflective flow reacting to environment */
-.hero-velari-text::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 2;
-  pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
-  background-size: 300% 200%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  mix-blend-mode: overlay;
-  animation: energyFlow 12s ease-in-out infinite alternate;
-}
-
-@keyframes energyFlow {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
+  color: #ffffff;
 }
 
 /* ===== Hero Tagline ===== */
@@ -284,7 +201,6 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
   color: #ffffff; /* Pure bright white */
   margin: 0;
   text-align: center;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); /* Added shadow to ensure readability against bright stars */
 }
 
 /* ===== Floating Bubble CTA ===== */
@@ -292,13 +208,7 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
   padding: 16px 42px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 100px; /* Pill shape */
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  box-shadow: 
-    0 10px 30px -10px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.05);
   color: #fff;
   font-family: 'Iceland', sans-serif;
   font-size: 18px; 
@@ -312,36 +222,14 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
   transform: translateY(0) scale(1);
 }
 
-/* Glass reflection shine inside button */
-.landing-cta::before {
-  content: ''; 
-  position: absolute; 
-  top: 0; left: -100%; width: 50%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transform: skewX(-20deg);
-  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
 .landing-cta:hover { 
   border-color: rgba(255, 255, 255, 0.2); 
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  background: rgba(255, 255, 255, 0.08);
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 
-    0 20px 40px -10px rgba(0, 0, 0, 0.7),
-    0 0 20px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
-}
-
-.landing-cta:hover::before { 
-  left: 150%; 
 }
 
 .landing-cta:active {
   transform: translateY(2px) scale(0.96);
-  box-shadow: 
-    0 5px 15px -5px rgba(0, 0, 0, 0.5),
-    inset 0 2px 5px rgba(0, 0, 0, 0.2);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes landingIn { from { opacity:0; } to { opacity:1; } }
@@ -870,7 +758,7 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
+  z-index: 0;
   overflow: hidden;
 }
 
@@ -878,5 +766,6 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
+  transform: translateZ(0);
+  will-change: transform;
 }

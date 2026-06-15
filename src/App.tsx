@@ -1,9 +1,23 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { VelariEngine } from './engine/VelariEngine';
 import { VelariAudio } from './engine/VelariAudio';
 import { ATMOSPHERES, DEFAULT_ATMOSPHERE } from './config/atmospheres';
 import type { Atmosphere } from './config/atmospheres';
 import { GalaxyBackground, GALAXY_THEMES } from './components/GalaxyBackground';
+
+const MemoizedVideoBackground = memo(() => (
+  <div className="velari-video-bg">
+    <video
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      src="/videos/background.mp4"
+      className="velari-video"
+    />
+  </div>
+));
 
 /* ===== SVG Icons (inline for zero-dep) ===== */
 const Icons = {
@@ -223,16 +237,7 @@ export default function App() {
         className={`velari-landing ${landingExit ? 'exiting' : ''}`}
         style={{ background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
       >
-        <div className="velari-video-bg">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            src="/videos/background.mp4"
-            className="velari-video"
-          />
-        </div>
+        <MemoizedVideoBackground />
 
         <div className="hero-velari">
           <h1 className="hero-velari-text" data-text="VELARI">VELARI</h1>
@@ -265,10 +270,7 @@ export default function App() {
 
       <div className={`velari-ui ${isDrawing ? 'drawing' : ''}`}>
         {/* Logo */}
-        <div className="velari-logo">
-          <div className="velari-logo__icon">{Icons.logo}</div>
-          <span className="velari-logo__text">VELARI</span>
-        </div>
+        <div className="velari-logo">VELARI</div>
 
         {/* Symmetry Controls */}
         <div className="symmetry-controls glass-panel">
