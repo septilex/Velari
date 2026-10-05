@@ -72,7 +72,10 @@ export class VelariEngine {
   private dreamNodes: { x: number; y: number; r: number; angle: number; life: number; maxLife: number; color: string; sides: number }[] = [];
 
   // Pre-generated stars
-  private stars: { x: number; y: number; s: number; b: number; speed: number }[] = [];
+  private stars: { x: number; y: number; s: number; b: number; speed: number; vx: number; vy: number }[] = [];
+  
+  // Comets
+  private comets: { x: number; y: number; vx: number; vy: number; length: number; size: number; delay: number; color: string }[] = [];
 
   // Showcase Mode
   private showcaseActive = false;
@@ -314,14 +317,39 @@ export class VelariEngine {
   /* ===== Init ===== */
   private initStars() {
     this.stars = [];
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 350; i++) {
       this.stars.push({
         x: Math.random(), y: Math.random(),
         s: 0.2 + Math.random() * 1.5,
         b: Math.random() * Math.PI * 2,
         speed: 0.2 + Math.random() * 0.8,
+        vx: (Math.random() - 0.5) * 0.0003,
+        vy: (Math.random() - 0.5) * 0.0003,
       });
     }
+    this.initComets();
+  }
+
+  private initComets() {
+    this.comets = [];
+    for (let i = 0; i < 4; i++) {
+      this.resetComet(Math.random() * 200);
+    }
+  }
+
+  private resetComet(delay = 0) {
+    const angle = Math.PI * 0.75 + (Math.random() - 0.5) * 0.2; // roughly down-left
+    const speed = 6 + Math.random() * 6;
+    this.comets.push({
+      x: this.width * 0.2 + Math.random() * this.width * 1.2,
+      y: -100 - Math.random() * 200,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      length: 60 + Math.random() * 100,
+      size: 1 + Math.random() * 1.5,
+      delay: delay,
+      color: Math.random() > 0.5 ? '#ffffff' : this.atmosphere.colors[0],
+    });
   }
 
   private initAmbientParticles() {
@@ -633,11 +661,11 @@ export class VelariEngine {
   private renderBackground() {
     const ctx = this.ctx;
     const [c1, c2] = this.atmosphere.bgGradient;
-    const t = this.time * 0.0002;
+    const t = this.time * 0.00035; // slightly faster global time for lively background
 
     // Gyro offsets subtle drift of the cosmic center
-    const gx = this.smoothGyroX * 0.06;
-    const gy = this.smoothGyroY * 0.06;
+    const gx = this.smoothGyroX * 0.08;
+    const gy = this.smoothGyroY * 0.08;
 
     // Radial deep space gradient — center shifts slightly with gyro
     const grad = ctx.createRadialGradient(
@@ -666,20 +694,68 @@ export class VelariEngine {
       ctx.fillRect(0, 0, this.width, this.height);
     }
 
-    // Stars — tiny parallax from gyro
-    const st = this.time * 0.0008;
+    // Stars — tiny parallax from gyro and continuous drifting
+    const st = this.time * 0.001;
+    const isLight = this.atmosphere.isLight;
     ctx.save();
     for (const star of this.stars) {
+      star.x += star.vx;
+      star.y += star.vy;
+      if (star.x < 0) star.x += 1;
+      if (star.x > 1) star.x -= 1;
+      if (star.y < 0) star.y += 1;
+      if (star.y > 1) star.y -= 1;
+
       const alpha = 0.15 + 0.35 * (0.5 + 0.5 * Math.sin(st * star.speed + star.b));
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = '#fff';
+      ctx.globalAlpha = isLight ? alpha * 1.5 : alpha;
+      ctx.fillStyle = isLight ? '#0f172a' : '#fff';
       ctx.beginPath();
       ctx.arc(
-        star.x * this.width  + this.smoothGyroX * 18 * star.s,
-        star.y * this.height + this.smoothGyroY * 18 * star.s,
+        star.x * this.width  + this.smoothGyroX * 25 * star.s,
+        star.y * this.height + this.smoothGyroY * 25 * star.s,
         star.s, 0, Math.PI * 2
       );
       ctx.fill();
+    }
+    
+    // Render Comets
+    for (let i = 0; i < this.comets.length; i++) {
+      const c = this.comets[i];
+      if (c.delay > 0) {
+        c.delay--;
+        continue;
+      }
+      c.x += c.vx;
+      c.y += c.vy;
+      
+      const tailX = c.x - c.vx * (c.length / 10);
+      const tailY = c.y - c.vy * (c.length / 10);
+      
+      const tailGrad = ctx.createLinearGradient(c.x, c.y, tailX, tailY);
+      tailGrad.addColorStop(0, c.color);
+      tailGrad.addColorStop(1, 'transparent');
+      
+      ctx.globalAlpha = isLight ? 0.6 : 0.8;
+      ctx.strokeStyle = tailGrad;
+      ctx.lineWidth = c.size;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(c.x, c.y);
+      ctx.lineTo(tailX, tailY);
+      ctx.stroke();
+      
+      ctx.fillStyle = isLight ? '#0f172a' : '#ffffff';
+      ctx.shadowColor = c.color;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.size * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      if (c.x < -100 || c.y > this.height + 100) {
+        this.comets.splice(i, 1);
+        this.resetComet(Math.random() * 150);
+        i--;
+      }
     }
     ctx.restore();
   }
@@ -713,7 +789,7 @@ export class VelariEngine {
 
       // Inner dot
       ctx.globalAlpha = a;
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = this.atmosphere.isLight ? '#0f172a' : '#fff';
       ctx.shadowColor = color;
       ctx.shadowBlur = 15;
       ctx.beginPath();

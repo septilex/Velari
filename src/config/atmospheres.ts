@@ -7,6 +7,7 @@ export interface Atmosphere {
   particleSpeed: number;
   glowIntensity: number;
   brushWidth: number;
+  isLight?: boolean;
 }
 
 export const ATMOSPHERES: Atmosphere[] = [
@@ -67,9 +68,19 @@ export const ATMOSPHERES: Atmosphere[] = [
     colors: ['#38bdf8', '#818cf8', '#c084fc', '#e879f9'],
     bgGradient: ['#060814', '#0c0e20'],
     particleSpeed: 1.2,
-    glowIntensity: 1.5,
-    brushWidth: 0.8,
   },
 ];
 
 export const DEFAULT_ATMOSPHERE = ATMOSPHERES[0];
+
+export const COSMOS_LIGHT_ATMOSPHERE: Atmosphere = {
+  id: 'cosmos-light',
+  name: 'Cosmos Light',
+  emoji: '✨',
+  colors: ['#0ea5e9', '#8b5cf6', '#d946ef', '#f43f5e'],
+  bgGradient: ['#ffffff', '#ffffff'],
+  particleSpeed: 0.8,
+  glowIntensity: 1.0,
+  brushWidth: 1.0,
+  isLight: true,
+};

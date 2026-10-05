@@ -21,6 +21,39 @@
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+body.light-mode {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --glass-bg: rgba(0, 0, 0, 0.04);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-hover: rgba(0, 0, 0, 0.08);
+  --text-primary: rgba(0, 0, 0, 0.92);
+  --text-secondary: rgba(0, 0, 0, 0.65);
+  --text-muted: rgba(0, 0, 0, 0.4);
+}
+
+body.light-mode .velari-logo {
+  color: #0f172a;
+  text-shadow: 0 0 10px rgba(124, 106, 239, 0.3);
+}
+
+body.light-mode .atmo-btn {
+  border-color: transparent;
+}
+body.light-mode .atmo-btn.active {
+  border-color: rgba(0,0,0,0.5);
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+body.light-mode .toolbar-btn__tooltip,
+body.light-mode .atmo-btn__label {
+  background: rgba(255,255,255,0.9);
+  border-color: var(--glass-border);
+}
+body.light-mode .export-toggle__switch,
+body.light-mode .sound-toggle__switch {
+  background: rgba(0,0,0,0.15);
+}
+
 /* ===== Global ===== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--bg-primary); color:var(--text-primary); font-family:var(--font-body); -webkit-font-smoothing:antialiased; touch-action:none; user-select:none; }
@@ -106,7 +139,7 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
 }
 .toolbar-btn svg { width:20px; height:20px; transition:var(--transition); }
 .toolbar-btn:hover { background:var(--glass-hover); color:var(--text-primary); }
-.toolbar-btn:hover svg { transform:scale(1.1); }
+.toolbar-btn:hover svg { }
 .toolbar-btn.active {
   background:rgba(124,106,239,0.15); color:var(--accent-glow);
 }
@@ -144,7 +177,7 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
   display:flex; align-items:center; justify-content:center;
   font-size:16px;
 }
-.atmo-btn:hover { transform:scale(1.2); border-color:rgba(255,255,255,0.2); }
+.atmo-btn:hover { border-color:rgba(255,255,255,0.4); }
 .atmo-btn.active { border-color:rgba(255,255,255,0.5); transform:scale(1.15); box-shadow:0 0 20px rgba(124,106,239,0.3); }
 .atmo-btn__label {
   position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
@@ -206,9 +239,11 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
 /* ===== Floating Bubble CTA ===== */
 .landing-cta {
   padding: 16px 42px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 100px; /* Pill shape */
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: #fff;
   font-family: 'Iceland', sans-serif;
   font-size: 18px; 
@@ -218,14 +253,14 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
   position: relative;
   overflow: hidden;
   /* Smooth physical animation */
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  transform: translateY(0) scale(1);
+  /* Managed by MagneticButton */
+  /* Managed by MagneticButton */
 }
 
 .landing-cta:hover { 
-  border-color: rgba(255, 255, 255, 0.2); 
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-4px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.5); 
+  background: rgba(255, 255, 255, 0.25);
+  /* Managed by MagneticButton */
 }
 
 .landing-cta:active {
@@ -254,6 +289,15 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
 }
 .sym-btn:hover { color:var(--text-primary); background:var(--glass-hover); }
 .sym-btn.active { color:var(--text-primary); background:rgba(124,106,239,0.18); }
+
+/* ===== Magnetic Button Base ===== */
+.magnetic-btn {
+  transition: transform 0.1s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease, color 0.3s ease !important;
+}
+.magnetic-btn:hover {
+  box-shadow: 0 0 25px var(--btn-glow, rgba(124, 106, 239, 0.4));
+  z-index: 10;
+}
 
 /* ===== Sound Toggle ===== */
 .sound-toggle {
@@ -284,6 +328,42 @@ html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--b
 }
 .sound-toggle__switch.active { background:rgba(124,106,239,0.4); }
 .sound-toggle__switch.active::after { left:19px; background:var(--accent-glow); box-shadow:0 0 8px var(--accent-glow); }
+
+/* ===== Cosmos Toggle (Left Side) ===== */
+.cosmos-toggle {
+  position:absolute; top:50%; left:24px; transform:translateY(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  padding:14px 10px;
+  cursor:pointer;
+}
+.cosmos-toggle__label {
+  font-size:11px; font-weight:600;
+  color:var(--text-secondary);
+  letter-spacing:0.5px;
+  text-transform:uppercase;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  margin-bottom: 4px;
+}
+.cosmos-toggle__switch {
+  width:20px; height:36px;
+  border-radius:10px; border:none;
+  background:rgba(255,255,255,0.1);
+  position:relative;
+  transition:var(--transition);
+}
+.cosmos-toggle__switch::after {
+  content:''; position:absolute;
+  bottom:3px; left:3px;
+  width:14px; height:14px;
+  border-radius:50%;
+  background:var(--text-secondary);
+  transition:var(--transition);
+}
+.cosmos-toggle__switch.active { background:rgba(92,224,216,0.4); }
+.cosmos-toggle__switch.active::after { bottom:19px; background:var(--accent-cyan); box-shadow:0 0 8px var(--accent-cyan); }
+body.light-mode .cosmos-toggle__switch { background: rgba(0,0,0,0.15); }
 
 /* ===== Info Panel ===== */
 .info-panel {

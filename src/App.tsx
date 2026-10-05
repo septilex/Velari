@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { VelariEngine } from './engine/VelariEngine';
 import { VelariAudio } from './engine/VelariAudio';
-import { ATMOSPHERES, DEFAULT_ATMOSPHERE } from './config/atmospheres';
+import { ATMOSPHERES, DEFAULT_ATMOSPHERE, COSMOS_LIGHT_ATMOSPHERE } from './config/atmospheres';
 import type { Atmosphere } from './config/atmospheres';
 import { GalaxyBackground, GALAXY_THEMES } from './components/GalaxyBackground';
 
@@ -18,6 +18,40 @@ const MemoizedVideoBackground = memo(() => (
     />
   </div>
 ));
+
+const MagneticButton = ({ children, className, onClick, id, style, title }: any) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!buttonRef.current) return;
+    const { clientX, clientY } = e;
+    const { left, top, width, height } = buttonRef.current.getBoundingClientRect();
+    const x = (clientX - (left + width / 2)) * 0.35;
+    const y = (clientY - (top + height / 2)) * 0.35;
+    buttonRef.current.style.transform = `translate(${x}px, ${y}px) scale(1.15)`;
+  };
+  
+  const handleMouseLeave = () => {
+    if (!buttonRef.current) return;
+    buttonRef.current.style.transform = ``;
+  };
+
+  return (
+    <button
+      ref={buttonRef}
+      className={`magnetic-btn ${className || ''}`}
+      onClick={onClick}
+      id={id}
+      style={style}
+      title={title}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </button>
+  );
+};
+
 
 /* ===== SVG Icons (inline for zero-dep) ===== */
 const Icons = {
@@ -86,6 +120,7 @@ export default function App() {
   const [showLanding, setShowLanding]   = useState(true);
   const [landingExit, setLandingExit]   = useState(false);
   const [atmosphere, setAtmosphere]     = useState<Atmosphere>(DEFAULT_ATMOSPHERE);
+  const [cosmosMode, setCosmosMode]     = useState(false);
   const [symmetry, setSymmetry]         = useState(6);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [isDrawing, setIsDrawing]       = useState(false);
@@ -128,7 +163,15 @@ export default function App() {
   }, [showLanding]);
 
   /* ===== Sync settings ===== */
-  useEffect(() => { engineRef.current?.setAtmosphere(atmosphere); }, [atmosphere]);
+  const activeAtmosphere = cosmosMode 
+    ? { 
+        ...atmosphere, 
+        bgGradient: COSMOS_LIGHT_ATMOSPHERE.bgGradient, 
+        isLight: true 
+      } 
+    : atmosphere;
+
+  useEffect(() => { engineRef.current?.setAtmosphere(activeAtmosphere); }, [activeAtmosphere]);
   useEffect(() => { engineRef.current?.setSymmetry(symmetry); },    [symmetry]);
   useEffect(() => { engineRef.current?.setDrift(driftEnabled); },   [driftEnabled]);
   useEffect(() => {
@@ -136,6 +179,14 @@ export default function App() {
     if (gyroEnabled) engineRef.current.enableGyroscope();
     else             engineRef.current.disableGyroscope();
   }, [gyroEnabled]);
+  
+  useEffect(() => {
+    if (activeAtmosphere.isLight) {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.remove('light-mode');
+    }
+  }, [activeAtmosphere]);
 
   /* ===== Pointer Handlers ===== */
   const onPointerDown = useCallback((e: React.PointerEvent) => {
@@ -247,9 +298,14 @@ export default function App() {
           A universe where imagination takes form.
         </h2>
 
-        <button className="landing-cta" onClick={handleEnter} id="begin-creating-btn">
+        <MagneticButton
+          className="landing-cta"
+          onClick={handleEnter}
+          id="begin-creating-btn"
+          style={{ '--btn-glow': 'rgba(255, 255, 255, 0.8)' } as any}
+        >
           BEGIN CREATING
-        </button>
+        </MagneticButton>
       </div>
     );
   }
@@ -272,17 +328,23 @@ export default function App() {
         {/* Logo */}
         <div className="velari-logo">VELARI</div>
 
+        {/* Cosmos Mode Toggle (Left Side) */}
+        <div className="cosmos-toggle glass-panel" onClick={() => setCosmosMode(!cosmosMode)} id="cosmos-toggle">
+          <span className="cosmos-toggle__label">Cosmos</span>
+          <div className={`cosmos-toggle__switch ${cosmosMode ? 'active' : ''}`} />
+        </div>
+
         {/* Symmetry Controls */}
         <div className="symmetry-controls glass-panel">
           {SYMMETRY_OPTIONS.map((n) => (
-            <button
+            <MagneticButton
               key={n}
               className={`sym-btn ${symmetry === n ? 'active' : ''}`}
               onClick={() => setSymmetry(n)}
               id={`symmetry-${n}-btn`}
             >
               {n}×
-            </button>
+            </MagneticButton>
           ))}
         </div>
 
@@ -294,27 +356,29 @@ export default function App() {
 
         {/* Export Panel */}
         <div className="export-panel glass-panel" id="export-panel">
-          <button
+          <MagneticButton
             className="export-btn"
             onClick={saveDrawing}
             id="save-drawing-btn"
             title="Save Drawing as PNG"
+            style={{ '--btn-glow': 'var(--accent-cyan)' } as any}
           >
             {Icons.download}
             <span className="desktop-only">Save Drawing</span>
             <span className="mobile-only">Save</span>
-          </button>
+          </MagneticButton>
 
-          <button
+          <MagneticButton
             className={`export-btn ${exportCopied ? 'copied' : ''}`}
             onClick={copyToClipboard}
             id="copy-clipboard-btn"
             title="Copy to Clipboard"
+            style={{ '--btn-glow': 'var(--accent-cyan)' } as any}
           >
             {exportCopied ? '✓' : Icons.copy}
             <span className="desktop-only">{exportCopied ? 'Copied' : 'Copy to Clipboard'}</span>
             <span className="mobile-only">{exportCopied ? 'Copied' : 'Copy'}</span>
-          </button>
+          </MagneticButton>
 
           <div
             className="export-toggle"
@@ -330,17 +394,17 @@ export default function App() {
         {/* Right Toolbar */}
         <div className="velari-toolbar glass-panel">
           {/* Gravity Wells */}
-          <button
+          <MagneticButton
             className={`toolbar-btn ${gravityMode ? 'active' : ''}`}
             onClick={() => setGravityMode(!gravityMode)}
             id="gravity-btn"
           >
             {Icons.gravity}
             <span className="toolbar-btn__tooltip">Gravity Wells</span>
-          </button>
+          </MagneticButton>
 
           {/* Infinite Drift */}
-          <button
+          <MagneticButton
             className={`toolbar-btn ${driftEnabled ? 'active' : ''}`}
             onClick={() => setDriftEnabled(!driftEnabled)}
             id="drift-btn"
@@ -348,42 +412,43 @@ export default function App() {
           >
             {Icons.drift}
             <span className="toolbar-btn__tooltip">Mirror Drift</span>
-          </button>
+          </MagneticButton>
 
           {/* Gyroscope — only shown on mobile */}
           {HAS_GYRO && (
-            <button
+            <MagneticButton
               className={`toolbar-btn ${gyroEnabled ? 'active' : ''}`}
               onClick={() => setGyroEnabled(!gyroEnabled)}
               id="gyro-btn"
             >
               {Icons.gyro}
               <span className="toolbar-btn__tooltip">Gyroscope</span>
-            </button>
+            </MagneticButton>
           )}
 
           {/* Clear */}
-          <button className="toolbar-btn" onClick={() => engineRef.current?.clearCanvas()} id="clear-btn">
+          <MagneticButton className="toolbar-btn" onClick={() => engineRef.current?.clearCanvas()} id="clear-btn">
             {Icons.clear}
             <span className="toolbar-btn__tooltip">Clear Canvas</span>
-          </button>
+          </MagneticButton>
         </div>
 
         {/* Atmosphere Selector */}
         <div className="atmosphere-ring glass-panel">
           {ATMOSPHERES.map((atmo) => (
-            <button
+            <MagneticButton
               key={atmo.id}
               className={`atmo-btn ${atmosphere.id === atmo.id ? 'active' : ''}`}
               onClick={() => setAtmosphere(atmo)}
               style={{
                 background: `linear-gradient(135deg, ${atmo.colors[0]}50, ${atmo.colors[1]}50)`,
-              }}
+                '--btn-glow': atmo.colors[0],
+              } as React.CSSProperties}
               id={`atmosphere-${atmo.id}-btn`}
             >
               {atmo.emoji}
               <span className="atmo-btn__label">{atmo.name}</span>
-            </button>
+            </MagneticButton>
           ))}
         </div>
 
